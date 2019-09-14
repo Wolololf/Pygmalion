@@ -1,35 +1,58 @@
-import plotly.graph_objects as go
+import random
 import numpy as np
+import plotly.graph_objects as go
+from chart_studio.grid_objs import Grid, Column
 
 
-def render():
-    # Generate curve data
-    t = np.linspace(-1, 1, 100)
-    x = t + t ** 2
-    y = t - t ** 2
-    xm = np.min(x) - 1.5
-    xM = np.max(x) + 1.5
-    ym = np.min(y) - 1.5
-    yM = np.max(y) + 1.5
-    N = 50
-    s = np.linspace(-1, 1, N)
-    xx = s + s ** 2
-    yy = s - s ** 2
+def render(width, height, steps):
+    step_sequence = range(0, steps)
 
-    # Create figure
-    fig_dict = {
+    grid, zmax = create_grid(width, height, steps)
+
+    fig_dict = create_empty_fig_dict()
+
+    setup_layout(fig_dict)
+    setup_menu(fig_dict, step_sequence)
+
+    fig_dict["data"] = go.Heatmap(
+        x=grid.get_column('x').data,
+        y=grid.get_column('y').data,
+        z=grid.get_column('z1').data,
+        zmin=0,
+        zmax=zmax[0],
+        zsmooth=False)
+
+    fig_dict["frames"] = [dict(data=go.Heatmap(
+        z=grid.get_column('z{}'.format(k + 1)).data,
+        zmin=0,
+        zmax=zmax[k],
+        zsmooth=False),
+        traces=[0],
+        name=str(k))
+        for k in step_sequence]
+
+    fig_dict["layout"]["sliders"] = [create_sliders_dict(step_sequence)]
+
+    fig = go.Figure(fig_dict)
+    fig.show()
+
+
+def create_empty_fig_dict():
+    return {
         "data": [],
         "layout": {},
         "frames": []
     }
 
-    # fill in most of layout
-    fig_dict["layout"]["xaxis"] = dict(range=[xm, xM], autorange=False, zeroline=False, showticklabels=False,
-                                       showgrid=False)
-    fig_dict["layout"]["yaxis"] = dict(range=[ym, yM], autorange=False, zeroline=False, showticklabels=False,
-                                       showgrid=False)
+
+def setup_layout(fig_dict):
+    fig_dict["layout"]["xaxis"] = dict(autorange=False, zeroline=False, showticklabels=False)
+    fig_dict["layout"]["yaxis"] = dict(autorange=False, zeroline=False, showticklabels=False, scaleanchor="x", scaleratio=1)
     fig_dict["layout"]["hovermode"] = "closest"
     fig_dict["layout"]["showlegend"] = False
+
+
+def setup_menu(fig_dict, step_sequence):
     fig_dict["layout"]["sliders"] = {
         "args": [
             "transition", {
@@ -39,21 +62,22 @@ def render():
         ],
         "initialValue": "0",
         "plotlycommand": "animate",
-        "values": s,
+        "values": step_sequence,
         "visible": True
     }
+
     fig_dict["layout"]["updatemenus"] = [
         {
             "buttons": [
                 {
-                    "args": [None, {"frame": {"duration": 500, "redraw": False},
-                                    "fromcurrent": True, "transition": {"duration": 300,
+                    "args": [None, {"frame": {"duration": 500, "redraw": True},
+                                    "fromcurrent": True, "transition": {"duration": 0,
                                                                         "easing": "quadratic-in-out"}}],
                     "label": "Play",
                     "method": "animate"
                 },
                 {
-                    "args": [[None], {"frame": {"duration": 0, "redraw": False},
+                    "args": [[None], {"frame": {"duration": 0, "redraw": True},
                                       "mode": "immediate",
                                       "transition": {"duration": 0}}],
                     "label": "Pause",
@@ -71,7 +95,19 @@ def render():
         }
     ]
 
-    sliders_dict = {
+
+def create_grid(width, height, steps):
+    zmax = []
+    columns = [Column(np.linspace(0, width, width), 'x'), Column(np.linspace(0, height, height), 'y')]
+    for k in range(steps):
+        z = [[create_heatmap_entry() for x in range(0, width)] for y in range(0, height)]
+        columns.append(Column(z, 'z{}'.format(k + 1)))
+        zmax.append(np.max(z))
+    return Grid(columns), zmax
+
+
+def create_sliders_dict(step_sequence):
+    return {
         "active": 0,
         "yanchor": "top",
         "xanchor": "left",
@@ -86,35 +122,16 @@ def render():
         "len": 0.9,
         "x": 0.1,
         "y": 0,
-        "steps": []
-    }
-
-    fig_dict["data"] = [go.Scatter(x=x, y=y,
-                                   mode="lines",
-                                   line=dict(width=2, color="blue")),
-                        go.Scatter(x=x, y=y,
-                                   mode="lines",
-                                   line=dict(width=2, color="blue"))]
-
-    for k in range(N):
-        frame = {"data": go.Scatter(
-            x=[xx[k]],
-            y=[yy[k]],
-            mode="markers",
-            marker=dict(color="red", size=10)), "name": str(k)}
-
-        fig_dict["frames"].append(frame)
-        slider_step = {"args": [
+        "steps": [{"args": [
             [k],
-            {"frame": {"duration": 300, "redraw": False},
+            {"frame": {"duration": 300, "redraw": True},
              "mode": "immediate",
              "transition": {"duration": 0}}
         ],
             "label": k,
-            "method": "animate"}
-        sliders_dict["steps"].append(slider_step)
+            "method": "animate"} for k in step_sequence]
+    }
 
-    fig_dict["layout"]["sliders"] = [sliders_dict]
 
-    fig = go.Figure(fig_dict)
-    fig.show()
+def create_heatmap_entry():
+    return random.randint(0, 10)
