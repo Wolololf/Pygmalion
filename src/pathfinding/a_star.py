@@ -15,7 +15,7 @@ particular graph implementation:
 
 >>> finder = pathfinder( distance=absolute_distance,        \\
 ...                      cost=fixed_cost(2),                \\
-...                      neighbors=grid_neighbors(10,10) );
+...                      neighbours=grid_neighbours(10,10) );
 >>> finder( (0,0), (2,2) )
 (8, [(0, 0), (0, 1), (1, 1), (1, 2), (2, 2)])
 
@@ -63,30 +63,30 @@ def fixed_cost(cost):
     return func
 
 
-def grid_neighbors(height, width):
+def grid_neighbours(height, width):
     """
-    Calculate neighbors for a simple grid where
+    Calculate neighbours for a simple grid where
     a movement can be made up, down, left, or right.
 
     Arguments:
     height - The height of the grid
     width - The width of the grid
 
-    >>> neighbor = grid_neighbors( 10, 10 )
-    >>> neighbor( (0,0) )
+    >>> neighbour = grid_neighbours( 10, 10 )
+    >>> neighbour( (0,0) )
     [(0, 1), (1, 0)]
-    >>> neighbor( (1,1) )
+    >>> neighbour( (1,1) )
     [(1, 2), (1, 0), (2, 1), (0, 1)]
 
     """
 
     def func(coord):
-        neighbor_list = [(coord[0], coord[1] + 1),
+        neighbour_list = [(coord[0], coord[1] + 1),
                          (coord[0], coord[1] - 1),
                          (coord[0] + 1, coord[1]),
                          (coord[0] - 1, coord[1])]
 
-        return [c for c in neighbor_list
+        return [c for c in neighbour_list
                 if c != coord
                 and c[0] >= 0 and c[0] < width
                 and c[1] >= 0 and c[1] < height]
@@ -94,9 +94,9 @@ def grid_neighbors(height, width):
     return func
 
 
-def find_path(neighbors=grid_neighbors(100, 100),
-               distance=absolute_distance,
-               cost=fixed_cost(1)):
+def pathfinder(neighbours=grid_neighbours(100, 100),
+              distance=absolute_distance,
+              cost=fixed_cost(1)):
     """
     Find the shortest distance between two nodes in a graph using the
     a-star algorithm. By default, the graph is a coordinate plane where
@@ -104,8 +104,8 @@ def find_path(neighbors=grid_neighbors(100, 100),
     and vertically.
 
     Keyword Arguments:
-    neighbor - Callable that takes a node and returns a list
-               of neighboring nodes.
+    neighbour - Callable that takes a node and returns a list
+               of neighbouring nodes.
     distance - Callable that returns the estimated distance
                between two nodes.
     cost     - Callable that returns the cost to traverse
@@ -151,19 +151,19 @@ def find_path(neighbors=grid_neighbors(100, 100),
 
             open_set.discard(current)
             closed_set.add(current)
-            for neighbor in neighbors(current):
-                tentative_score = g_score[current] + cost(current, neighbor)
+            for neighbour in neighbours(current):
+                tentative_score = g_score[current] + cost(current, neighbour)
 
-                if neighbor in closed_set and (neighbor in g_score and tentative_score >= g_score[neighbor]):
+                if neighbour in closed_set and (neighbour in g_score and tentative_score >= g_score[neighbour]):
                     continue
 
-                if neighbor not in open_set or (neighbor in g_score and tentative_score < g_score[neighbor]):
-                    came_from[neighbor] = current
-                    g_score[neighbor] = tentative_score
-                    f_score[neighbor] = tentative_score + distance(neighbor, end)
+                if neighbour not in open_set or (neighbour in g_score and tentative_score < g_score[neighbour]):
+                    came_from[neighbour] = current
+                    g_score[neighbour] = tentative_score
+                    f_score[neighbour] = tentative_score + distance(neighbour, end)
 
-                    if neighbor not in open_set:
-                        open_set.add(neighbor)
+                    if neighbour not in open_set:
+                        open_set.add(neighbour)
 
         return None, []
 

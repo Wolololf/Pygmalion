@@ -46,8 +46,8 @@ def create_empty_fig_dict():
 
 
 def setup_layout(fig_dict):
-    fig_dict["layout"]["xaxis"] = dict(autorange=False, zeroline=False, showticklabels=False)
-    fig_dict["layout"]["yaxis"] = dict(autorange=False, zeroline=False, showticklabels=False, scaleanchor="x", scaleratio=1)
+    fig_dict["layout"]["xaxis"] = dict(autorange=True, zeroline=False, showticklabels=False)
+    fig_dict["layout"]["yaxis"] = dict(autorange=True, zeroline=False, showticklabels=False, scaleanchor="x", scaleratio=1)
     fig_dict["layout"]["hovermode"] = "closest"
     fig_dict["layout"]["showlegend"] = False
 
