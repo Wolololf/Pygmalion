@@ -4,11 +4,21 @@ import plotly.graph_objects as go
 from chart_studio.grid_objs import Grid, Column
 
 
-def render(width, height, steps):
+def render_grid_simulation(grid_simulation):
+    step_sequence = range(0, len(grid_simulation))
+    grid, zmax = create_simulation_grid(grid_simulation)
+
+    render(grid, zmax, step_sequence)
+
+
+def render_random_heatmap(width, height, steps):
     step_sequence = range(0, steps)
+    grid, zmax = create_random_heatmap_grid(width, height, steps)
 
-    grid, zmax = create_grid(width, height, steps)
+    render(grid, zmax, step_sequence)
 
+
+def render(grid, zmax, step_sequence):
     fig_dict = create_empty_fig_dict()
 
     setup_layout(fig_dict)
@@ -18,9 +28,12 @@ def render(width, height, steps):
         x=grid.get_column('x').data,
         y=grid.get_column('y').data,
         z=grid.get_column('z1').data,
+        xgap=1,
+        ygap=1,
         zmin=0,
         zmax=zmax[0],
-        zsmooth=False)
+        zsmooth=False,
+        colorscale=['rgb(255,255,255)', 'rgb(0, 255, 0)', 'rgb(255, 0, 0)', 'rgb(0, 0, 0)', 'rgb(191, 191, 191)'])
 
     fig_dict["frames"] = [dict(data=go.Heatmap(
         z=grid.get_column('z{}'.format(k + 1)).data,
@@ -46,7 +59,6 @@ def create_empty_fig_dict():
 
 
 def setup_layout(fig_dict):
-    fig_dict["layout"]["xaxis"] = dict(autorange=True, zeroline=False, showticklabels=False)
     fig_dict["layout"]["yaxis"] = dict(autorange=True, zeroline=False, showticklabels=False, scaleanchor="x", scaleratio=1)
     fig_dict["layout"]["hovermode"] = "closest"
     fig_dict["layout"]["showlegend"] = False
@@ -96,16 +108,6 @@ def setup_menu(fig_dict, step_sequence):
     ]
 
 
-def create_grid(width, height, steps):
-    zmax = []
-    columns = [Column(np.linspace(0, width, width), 'x'), Column(np.linspace(0, height, height), 'y')]
-    for k in range(steps):
-        z = [[create_heatmap_entry() for x in range(0, width)] for y in range(0, height)]
-        columns.append(Column(z, 'z{}'.format(k + 1)))
-        zmax.append(np.max(z))
-    return Grid(columns), zmax
-
-
 def create_sliders_dict(step_sequence):
     return {
         "active": 0,
@@ -133,5 +135,30 @@ def create_sliders_dict(step_sequence):
     }
 
 
+def create_random_heatmap_grid(width, height, steps):
+    zmax = []
+    columns = [Column(np.linspace(0, width, width), 'x'), Column(np.linspace(0, height, height), 'y')]
+    for k in range(steps):
+        z = [[create_heatmap_entry() for x in range(0, width)] for y in range(0, height)]
+        columns.append(Column(z, 'z{}'.format(k + 1)))
+        zmax.append(np.max(z))
+    return Grid(columns), zmax
+
+
 def create_heatmap_entry():
     return random.randint(0, 10)
+
+
+def create_simulation_grid(grid_simulation):
+    zmax = []
+
+    steps = len(grid_simulation)
+    width = len(grid_simulation[0])
+    height = len(grid_simulation[0][0])
+
+    columns = [Column(np.linspace(0, width, width), 'x'), Column(np.linspace(0, height, height), 'y')]
+    for k in range(steps):
+        z = [[grid_simulation[k][x][y] for x in range(0, width)] for y in range(0, height)]
+        columns.append(Column(z, 'z{}'.format(k + 1)))
+        zmax.append(np.max(z))
+    return Grid(columns), zmax

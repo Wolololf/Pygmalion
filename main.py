@@ -1,8 +1,19 @@
-from rendering.render_loop import render
+from rendering.render_loop import render_grid_simulation
+from simulation.Simulation import Simulation
 
 
 def main():
-    render(100, 100, 50)
+    width = 100
+    height = 100
+
+    sim = Simulation(width, height)
+
+    steps = []
+
+    while not sim.is_finished():
+        steps.append(sim.simulate_step())
+
+    render_grid_simulation(steps)
 
 
 if __name__ == "__main__":
