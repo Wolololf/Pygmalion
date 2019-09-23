@@ -1,0 +1,7 @@
+{
+  "name": "friendly",
+  "colour": [185, 5, 255],
+  "hitpoints": 10,
+  "damage": 1,
+  "speed": 1
+}
